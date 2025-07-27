@@ -6,24 +6,9 @@ ClientsConfig = [
 
 ServersConfig = [
     {
-        "server_name": "REDHAT_MCP",
-        "command": "uv",
-        "args": [
-            "--directory",
-            "../servers/REDHAT_MCP/redhat-api-mcp",
-            "run",
-            "redhat_mcp_server.py"
-        ]
-    },
-    {
         "server_name": "LANGSMITH_MCP",
-        "command": "uv",
-        "args": [
-            "--directory",
-            "../servers/LANGSMITH_MCP",
-            "run",
-            "python",
-            "main.py"
-        ]
-    }
+        "command": "uvx",
+        "args": ["langsmith-mcp-server"],
+        "env": {"LANGSMITH_API_KEY": "lsv2_demo_key_for_testing"}
+    },
 ]

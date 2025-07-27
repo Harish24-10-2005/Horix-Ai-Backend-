@@ -68,6 +68,32 @@ The Horix Ai MCP Platform enables AI assistants to interact with external servic
 
 ## 🚀 Quick Start
 
+### One-Click Launch (Recommended)
+
+Use the **MCP Launcher** to automatically set up and run both clients:
+
+```bash
+# Python Launcher (Recommended - Cross-platform)
+python mcp_launcher.py
+
+# Windows PowerShell
+.\mcp_executor_final.ps1
+
+# Windows Batch  
+mcp_executor.bat
+
+# Cross-platform Node.js
+node mcp_executor.js
+```
+
+**MCP Launcher Options:**
+- `--help` - Show help information
+- `--show-help` - Show detailed help information  
+- `--js-only` - Run only JavaScript client
+- `--python-only` - Run only Python client  
+- `--dev` - Run JavaScript client in development mode
+- `--clean` - Clean build directories before starting
+
 ### Prerequisites
 
 - **Node.js**208+ (for JavaScript implementation)

@@ -40,8 +40,19 @@ async def initialize_all_mcp(exit_stack):
                     print(f"Absolute path      : {absolute_path}")
                     print(f"Path exists        : {os.path.exists(absolute_path)}")
 
+            # Set environment variables if provided
+            env = None
+            if "env" in server:
+                env = os.environ.copy()
+                env.update(server["env"])
+                print(f"Environment vars   : {list(server['env'].keys())}")
+
             # Start stdio client
-            server_params = StdioServerParameters(command=server["command"], args=server["args"])
+            server_params = StdioServerParameters(
+                command=server["command"], 
+                args=server["args"],
+                env=env
+            )
             stdio_transport = await exit_stack.enter_async_context(stdio_client(server_params))
             stdio, write = stdio_transport
 
