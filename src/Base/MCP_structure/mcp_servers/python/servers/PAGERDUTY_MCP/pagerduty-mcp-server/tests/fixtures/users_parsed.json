@@ -1,0 +1,51 @@
+{
+    "id": "012fb6899a",
+    "name": "User Name",
+    "email": "user278c511884@example.com",
+    "type": "user",
+    "teams": [
+        {
+            "id": "5fc61f8dfd",
+            "type": "team_reference",
+            "summary": "Anonymized Team"
+        },
+        {
+            "id": "ac7ae09a2a",
+            "type": "team_reference",
+            "summary": "Anonymized Team"
+        },
+        {
+            "id": "f29d37098d",
+            "type": "team_reference",
+            "summary": "Anonymized Team"
+        },
+        {
+            "id": "30216a30a1",
+            "type": "team_reference",
+            "summary": "Anonymized Team"
+        }
+    ],
+    "contact_methods": [
+        {
+            "id": "6d3be97280",
+            "type": "email_contact_method_reference",
+            "summary": "Default"
+        },
+        {
+            "id": "91a67ef88a",
+            "type": "phone_contact_method_reference",
+            "summary": "Mobile"
+        },
+        {
+            "id": "b43752f77a",
+            "type": "push_notification_contact_method_reference",
+            "summary": "iPhone"
+        }
+    ],
+    "notification_rules": [
+        {
+            "id": "b7f5a03bea",
+            "type": "assignment_notification_rule_reference"
+        }
+    ]
+} 

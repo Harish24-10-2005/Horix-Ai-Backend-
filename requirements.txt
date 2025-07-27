@@ -1,0 +1,16 @@
+# Enhanced AI Agent Protocol Dependencies
+# Core dependencies for MCP server management and natural language processing
+
+# HTTP client for GitHub API and MCP server downloads
+aiohttp>=3.9.0
+
+# LangChain for LLM integration and natural language processing
+langchain-groq>=0.1.0
+langchain-core>=0.2.0
+
+# Optional but recommended for better performance
+requests>=2.31.0
+
+# Development and testing (optional)
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0

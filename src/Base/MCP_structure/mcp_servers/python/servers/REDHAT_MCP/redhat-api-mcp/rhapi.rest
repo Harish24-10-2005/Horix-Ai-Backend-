@@ -1,0 +1,78 @@
+# @name auth
+# Variables - using environment variable for offline_token
+@offline_token = {{$processEnv RH_API_OFFLINE_TOKEN}}
+
+# POST request to get a new access token using refresh token
+POST https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&client_id=rhsm-api&refresh_token={{offline_token}}
+
+
+###
+
+# @name searchKCS
+# Search for solutions using KCS search API
+POST https://access.redhat.com/hydra/rest/search/v2/kcs
+Content-Type: application/json
+Authorization: Bearer {{auth.response.body.access_token}}
+
+{
+  "q": "CVE",
+  "rows": 50,
+  "expression": "sort=score%20DESC&fq=documentKind%3A(%22Article%22%20OR%20%22Solution%22)%20AND%20accessState%3A(%22active%22%20OR%20%22private%22)&fl=allTitle%2CcaseCount%2CdocumentKind%2C%5Belevated%5D%2ChasPublishedRevision%2Cid%2Clanguage%2ClastModifiedDate%2CModerationState%2Cscore%2Curi%2Cresource_uri%2Cview_uri%2CcreatedDate&showRetired=false",
+  "start": 0,
+  "clientName": "cli"
+}
+
+
+###
+
+# @name getKCS
+# Search for solutions using KCS search API
+POST https://access.redhat.com/hydra/rest/search/v2/kcs
+Content-Type: application/json
+Authorization: Bearer {{auth.response.body.access_token}}
+
+{
+  "q": "id:4217411"
+}
+
+
+###
+
+# @name searchCases
+# Search for cases with keyword about SKU restriction
+POST https://access.redhat.com/hydra/rest/search/v2/cases
+Content-Type: application/json
+Authorization: Bearer {{auth.response.body.access_token}}
+
+{
+    "q": "\"The selected SKU 'Standard_D8s_v5' is restricted in region .* for selected subscription.\"",
+    "start": 0,
+    "rows": 10,
+    "partnerSearch": false,
+    "expression": "sort=case_lastModifiedDate%20desc&fl=case_createdByName%2Ccase_createdDate%2Ccase_lastModifiedDate%2Ccase_lastModifiedByName%2Cid%2Curi%2Ccase_summary%2Ccase_status%2Ccase_product%2Ccase_version%2Ccase_accountNumber%2Ccase_number%2Ccase_contactName%2Ccase_owner%2Ccase_severity"
+}
+
+###
+
+# @name getCase
+# Get details for a specific case by ID
+GET https://access.redhat.com/hydra/rest/v1/cases/04148651
+Authorization: Bearer {{auth.response.body.access_token}}
+
+
+###
+# @name getIncidentIDbyName
+# Get incident ID by incident name
+@incident_name = itn-2025-00094
+GET https://api.openshift.com/api/web-rca/v1/incidents?incident_name={{incident_name}}
+Authorization: Bearer {{auth.response.body.access_token}}
+
+
+###
+# @name getIncidentEvents
+# Get events for the incident found by name
+GET https://api.openshift.com/api/web-rca/v1/incidents/{{getIncidentIDbyName.response.body.items[0].id}}/events
+Authorization: Bearer {{auth.response.body.access_token}}

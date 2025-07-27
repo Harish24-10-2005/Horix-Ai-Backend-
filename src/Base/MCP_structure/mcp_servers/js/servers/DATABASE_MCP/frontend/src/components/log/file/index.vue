@@ -1,0 +1,376 @@
+<template>
+    <div v-loading="firstLoading">
+        <div v-if="defaultButton">
+            <el-checkbox border v-model="tailLog" class="float-left" @change="changeTail(false)" v-if="showTail">
+                {{ $t('commons.button.watch') }}
+            </el-checkbox>
+            <el-button
+                class="ml-2.5"
+                v-if="showDownload"
+                @click="onDownload"
+                icon="Download"
+                :disabled="logs.length === 0"
+            >
+                {{ $t('commons.button.download') }}
+            </el-button>
+            <span v-if="$slots.button" class="ml-2.5">
+                <slot name="button"></slot>
+            </span>
+        </div>
+        <div class="log-container" ref="logContainer" @scroll="onScroll" :style="containerStyle">
+            <div class="log-spacer" :style="{ height: `${totalHeight}px` }"></div>
+            <div
+                v-for="(log, index) in visibleLogs"
+                :key="startIndex + index"
+                class="log-item"
+                :style="{ top: `${(startIndex + index) * logHeight}px` }"
+            >
+                <hightlight :log="log" :type="config.colorMode ?? 'nginx'"></hightlight>
+            </div>
+        </div>
+    </div>
+</template>
+<script lang="ts" setup>
+import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { downloadFile } from '@/utils/util';
+import { readByLine } from '@/api/modules/files';
+import { GlobalStore } from '@/store';
+import bus from '@/global/bus';
+import hightlight from '@/components/log/custom-hightlight/index.vue';
+const globalStore = GlobalStore();
+
+interface LogProps {
+    id?: number;
+    type?: string;
+    name?: string;
+    tail?: boolean;
+    taskID?: string;
+    colorMode?: string;
+    taskType?: string;
+    taskOperate?: string;
+    resourceID?: number;
+
+    operateNode?: string;
+}
+
+const props = defineProps({
+    config: {
+        type: Object as () => LogProps | null,
+        default: () => ({
+            id: 0,
+            type: '',
+            name: '',
+            tail: false,
+            colorMode: 'nginx',
+            taskType: '',
+            taskOperate: '',
+            resourceID: 0,
+            taskID: '',
+
+            operateNode: '',
+        }),
+    },
+    defaultButton: {
+        type: Boolean,
+        default: true,
+    },
+    loading: {
+        type: Boolean,
+        default: true,
+    },
+    hasContent: {
+        type: Boolean,
+        default: false,
+    },
+    heightDiff: {
+        type: Number,
+        default: 420,
+    },
+    showTail: {
+        type: Boolean,
+        default: true,
+    },
+    showDownload: {
+        type: Boolean,
+        default: true,
+    },
+});
+const stopSignals = [
+    'docker-compose up failed!',
+    'docker-compose up successful!',
+    'image build failed!',
+    'image build successful!',
+    'image pull failed!',
+    'image pull successful!',
+    'image push failed!',
+    'image push successful!',
+    '[TASK-END]',
+];
+const emit = defineEmits(['update:loading', 'update:hasContent', 'update:isReading', 'stop-reading']);
+const tailLog = ref(true);
+const loading = ref(props.loading);
+const readReq = reactive({
+    id: 0,
+    type: '',
+    name: '',
+    page: 1,
+    pageSize: 500,
+    latest: false,
+    taskID: '',
+    taskType: '',
+    taskOperate: '',
+    resourceID: 0,
+});
+const isLoading = ref(false);
+const end = ref(false);
+const lastLogs = ref([]);
+const maxPage = ref(0);
+const minPage = ref(0);
+let timer: NodeJS.Timer | null = null;
+const logPath = ref('');
+
+const firstLoading = ref(false);
+const logs = ref<string[]>([]);
+const logContainer = ref<HTMLElement | null>(null);
+const logHeight = 20;
+const logCount = ref(0);
+const totalHeight = computed(() => logHeight * logCount.value);
+const containerHeight = ref(500);
+const visibleCount = computed(() => Math.ceil(containerHeight.value / logHeight));
+const startIndex = ref(0);
+
+const visibleLogs = computed(() => {
+    return logs.value.slice(startIndex.value, startIndex.value + visibleCount.value);
+});
+
+const onScroll = () => {
+    if (logContainer.value) {
+        const scrollTop = logContainer.value.scrollTop;
+        if (scrollTop == 0) {
+            readReq.page = minPage.value - 1;
+            if (readReq.page < 1) {
+                return;
+            }
+            minPage.value = readReq.page;
+            getContent(true);
+        }
+        startIndex.value = Math.floor(scrollTop / logHeight);
+    }
+};
+
+const changeLoading = () => {
+    loading.value = !loading.value;
+    emit('update:loading', loading.value);
+};
+
+const onDownload = async () => {
+    changeLoading();
+    downloadFile(logPath.value, globalStore.currentNode);
+    changeLoading();
+};
+
+const changeTail = (fromOutSide: boolean) => {
+    if (fromOutSide) {
+        tailLog.value = !tailLog.value;
+    }
+    if (tailLog.value) {
+        timer = setInterval(() => {
+            getContent(false);
+        }, 1000 * 3);
+    } else {
+        onCloseLog();
+    }
+};
+
+const clearLog = (): void => {
+    logs.value = [];
+    readReq.page = 1;
+    lastLogs.value = [];
+};
+
+const getContent = async (pre: boolean) => {
+    if (isLoading.value) {
+        return;
+    }
+    readReq.id = props.config.id;
+    readReq.type = props.config.type;
+    readReq.name = props.config.name;
+    readReq.taskID = props.config.taskID;
+    readReq.taskType = props.config.taskType;
+    readReq.taskOperate = props.config.taskOperate;
+    readReq.resourceID = props.config.resourceID;
+    if (readReq.page < 1) {
+        readReq.page = 1;
+    }
+    isLoading.value = true;
+    emit('update:isReading', true);
+
+    let res;
+    try {
+        res = await readByLine(readReq, props.config.operateNode || '');
+    } catch (error) {
+        isLoading.value = false;
+        firstLoading.value = false;
+    }
+
+    logPath.value = res.data.path;
+    firstLoading.value = false;
+
+    if (!end.value && res.data.end) {
+        lastLogs.value = [...logs.value];
+    }
+    if (res.data.lines && res.data.lines.length > 0) {
+        res.data.lines = res.data.lines.map((line) =>
+            line.replace(/\\u(\w{4})/g, function (match, grp) {
+                return String.fromCharCode(parseInt(grp, 16));
+            }),
+        );
+        const newLogs = res.data.lines;
+        if (newLogs.length === readReq.pageSize && readReq.page < res.data.total) {
+            readReq.page++;
+        }
+        if (
+            readReq.type == 'php' &&
+            logs.value.length > 0 &&
+            newLogs.length > 0 &&
+            newLogs[newLogs.length - 1] === logs.value[logs.value.length - 1]
+        ) {
+            isLoading.value = false;
+            return;
+        }
+
+        if (stopSignals.some((signal) => newLogs[newLogs.length - 1].endsWith(signal))) {
+            onCloseLog();
+        }
+        if (end.value) {
+            if ((logs.value.length = 0)) {
+                logs.value = newLogs;
+            } else {
+                logs.value = pre ? [...newLogs, ...lastLogs.value] : [...lastLogs.value, ...newLogs];
+            }
+        } else {
+            if ((logs.value.length = 0)) {
+                logs.value = newLogs;
+            } else {
+                logs.value = pre ? [...newLogs, ...logs.value] : [...logs.value, ...newLogs];
+            }
+        }
+
+        nextTick(() => {
+            if (pre) {
+                logContainer.value.scrollTop = 2000;
+            } else {
+                logContainer.value.scrollTop = totalHeight.value;
+                containerHeight.value = logContainer.value.getBoundingClientRect().height;
+            }
+        });
+    }
+
+    logCount.value = logs.value.length;
+    end.value = res.data.end;
+    emit('update:hasContent', logs.value.length > 0);
+    if (readReq.latest) {
+        readReq.page = res.data.total;
+        readReq.latest = false;
+        maxPage.value = res.data.total;
+        minPage.value = res.data.total;
+    }
+    if (logs.value && logs.value.length > 3000) {
+        if (pre) {
+            logs.value.splice(logs.value.length - readReq.pageSize, readReq.pageSize);
+            if (maxPage.value > 1) {
+                maxPage.value--;
+            }
+        } else {
+            logs.value.splice(0, readReq.pageSize);
+            if (minPage.value > 1) {
+                minPage.value++;
+            }
+        }
+    }
+    isLoading.value = false;
+};
+
+const onCloseLog = async () => {
+    tailLog.value = false;
+    if (timer) {
+        clearInterval(Number(timer));
+        timer = null;
+    }
+    timer = null;
+    emit('stop-reading');
+    isLoading.value = false;
+    emit('update:isReading', false);
+    bus.emit('refreshTask', true);
+};
+
+watch(
+    () => props.loading,
+    (newLoading) => {
+        loading.value = newLoading;
+    },
+);
+
+const init = async () => {
+    if (props.config.tail) {
+        tailLog.value = props.config.tail;
+    } else {
+        tailLog.value = false;
+    }
+    if (tailLog.value) {
+        changeTail(false);
+    }
+    readReq.latest = true;
+    await getContent(false);
+};
+
+const containerStyle = computed(() => ({
+    height: `calc(100vh - ${props.heightDiff}px)`,
+}));
+
+onMounted(async () => {
+    logs.value = [];
+    firstLoading.value = true;
+    await init();
+    nextTick(() => {
+        if (logContainer.value) {
+            logContainer.value.scrollTop = totalHeight.value;
+            containerHeight.value = logContainer.value.getBoundingClientRect().height;
+        }
+    });
+});
+
+onUnmounted(() => {
+    onCloseLog();
+});
+
+defineExpose({ changeTail, onDownload, clearLog });
+</script>
+<style lang="scss" scoped>
+.log-container {
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+    background-color: var(--panel-logs-bg-color);
+    margin-top: 10px;
+}
+
+.log-spacer {
+    position: relative;
+    width: 100%;
+}
+
+.log-item {
+    position: absolute;
+    width: 100%;
+    padding: 5px;
+    color: #f5f5f5;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.log-content {
+    font-size: 14px;
+    line-height: 20px;
+}
+</style>
