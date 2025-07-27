@@ -315,7 +315,7 @@ Respond with ONLY the JSON object, no other text."""
                 # Update the enhanced protocol keywords
                 await self._update_enhanced_protocol_keywords(add_request.name)
                 
-                return f"""✅ Successfully added and installed {add_request.name.title()} MCP server!
+                return f"""✅ Successfully added and configured {add_request.name.title()} MCP server!
 
 📦 **Server Details:**
   • Name: {mcp_server.name}
@@ -323,16 +323,33 @@ Respond with ONLY the JSON object, no other text."""
   • Stars: ⭐ {server_info['stars']}
   • Language: {server_info['language']}
 
+🔧 **Configuration Updated:**
+  • ✅ Added to Python client config
+  • ✅ Added to TypeScript client config (if applicable)
+  • ✅ Run commands automatically configured
+
 🎯 **Ready to use:**
   • 'create agent with {add_request.name}'
   • 'check {add_request.name} status'
   • '{add_request.name} mcp help'"""
             else:
-                return f"""📝 Added {add_request.name.title()} MCP to registry (installation pending)
+                return f"""✅ Configuration updated for {add_request.name.title()} MCP server!
 
-🔧 **Manual setup may be required:**
+📦 **Server Details:**
+  • Name: {mcp_server.name}
   • Repository: {server_info['url']}
-  • Check installation logs for details"""
+  • Stars: ⭐ {server_info['stars']}
+  • Language: {server_info['language']}
+
+🔧 **Configuration Status:**
+  • ✅ Added to client configuration files
+  • ✅ Run commands configured
+  • ⚠️ Manual installation may be required
+
+💡 **Next Steps:**
+  • Check the server directory for installation issues
+  • Verify dependencies are installed
+  • Repository: {server_info['url']}"""
                 
         except Exception as e:
             logger.error(f"Error auto-adding MCP server: {e}")

@@ -21,14 +21,13 @@ from langsmith_mcp_server.services import (
 mcp = FastMCP("LangSmith API MCP Server")
 
 # Default API key (will be overridden in main or by direct assignment)
-# default_api_key = os.environ.get("LANGSMITH_API_KEY")
-# default_api_key = "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"
-# langsmith_client = LangSmithClient(default_api_key) if default_api_key else None
+default_api_key = os.environ.get("LANGSMITH_API_KEY")
+langsmith_client = LangSmithClient(default_api_key) if default_api_key else None
 
 # Register all tools with the server using simplified registration modules
-register_tools(mcp, langsmith_client= None)
-register_prompts(mcp, langsmith_client = None)
-register_resources(mcp, langsmith_client = None)
+register_tools(mcp, langsmith_client)
+register_prompts(mcp, langsmith_client)
+register_resources(mcp, langsmith_client)
 
 
 def main() -> None:

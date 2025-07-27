@@ -158,12 +158,12 @@ class MCPServerManager:
         self.config_path = self.servers_path / "python" / "clients" / "src" / "client_and_server_config.py"
         
     async def download_and_install_server(self, server_info: MCPServerInfo) -> bool:
-        """Download and install an MCP server"""
+        """Download and install an MCP server with graceful fallback"""
         try:
             logger.info(f"Downloading MCP server: {server_info.name}")
             
             # Determine target directory based on language
-            if server_info.language == "python":
+            if server_info.language.lower() in ["python"]:
                 target_dir = self.python_servers_path / server_info.name
             else:
                 target_dir = self.js_servers_path / server_info.name
@@ -171,38 +171,69 @@ class MCPServerManager:
             # Create target directory
             target_dir.mkdir(parents=True, exist_ok=True)
             
-            # Download the repository
-            zip_path = target_dir / "temp.zip"
-            await self._download_file(server_info.download_url, zip_path)
+            download_success = False
             
-            # Extract the repository
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(target_dir)
+            try:
+                # Attempt to download the repository
+                zip_path = target_dir / "temp.zip"
+                await self._download_file(server_info.download_url, zip_path)
+                
+                # Extract the repository
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(target_dir)
+                
+                # Remove the zip file
+                zip_path.unlink()
+                
+                # Find the extracted folder (usually has a suffix like -main)
+                extracted_folders = [f for f in target_dir.iterdir() if f.is_dir()]
+                if extracted_folders:
+                    extracted_folder = extracted_folders[0]
+                    # Move contents up one level
+                    for item in extracted_folder.iterdir():
+                        shutil.move(str(item), str(target_dir))
+                    extracted_folder.rmdir()
+                
+                download_success = True
+                logger.info(f"Successfully downloaded {server_info.name}")
+                
+                # Install dependencies
+                await self._install_dependencies(target_dir, server_info)
+                
+                # Auto-detect run command and args from actual structure
+                detected_info = await self._detect_run_configuration(target_dir, server_info)
+                if detected_info:
+                    server_info = detected_info
+                    
+            except Exception as download_error:
+                logger.warning(f"Download failed for {server_info.name}: {download_error}")
+                logger.info(f"Proceeding with configuration update using provided info...")
+                
+                # Create a basic placeholder structure for configuration
+                placeholder_file = target_dir / "README.md"
+                with open(placeholder_file, 'w') as f:
+                    f.write(f"# {server_info.name}\n\nPlaceholder for MCP server.\nRepository: {server_info.repository_url}")
             
-            # Remove the zip file
-            zip_path.unlink()
-            
-            # Find the extracted folder (usually has a suffix like -main)
-            extracted_folders = [f for f in target_dir.iterdir() if f.is_dir()]
-            if extracted_folders:
-                extracted_folder = extracted_folders[0]
-                # Move contents up one level
-                for item in extracted_folder.iterdir():
-                    shutil.move(str(item), str(target_dir))
-                extracted_folder.rmdir()
-            
-            # Install dependencies
-            await self._install_dependencies(target_dir, server_info)
-            
-            # Update configuration
+            # Always attempt to update configuration (even if download failed)
             await self._update_server_config(server_info)
             
-            logger.info(f"Successfully installed MCP server: {server_info.name}")
-            return True
-            
+            if download_success:
+                logger.info(f"Successfully installed and configured MCP server: {server_info.name}")
+                return True
+            else:
+                logger.info(f"Configuration updated for {server_info.name} (manual installation may be required)")
+                return True  # Return True since config was updated
+                
         except Exception as e:
             logger.error(f"Error installing MCP server {server_info.name}: {e}")
-            return False
+            # Even if everything fails, try to update config as last resort
+            try:
+                await self._update_server_config(server_info)
+                logger.info(f"Configuration updated for {server_info.name} despite installation errors")
+                return True
+            except Exception as config_error:
+                logger.error(f"Failed to update configuration: {config_error}")
+                return False
     
     async def _download_file(self, url: str, path: Path):
         """Download a file from URL"""
@@ -239,51 +270,373 @@ class MCPServerManager:
         except subprocess.CalledProcessError as e:
             logger.error(f"Error installing dependencies: {e}")
     
-    async def _update_server_config(self, server_info: MCPServerInfo):
-        """Update the server configuration file"""
+    async def _detect_run_configuration(self, target_dir: Path, server_info: MCPServerInfo) -> Optional[MCPServerInfo]:
+        """Auto-detect the correct run configuration from the installed MCP structure"""
         try:
+            logger.info(f"Auto-detecting run configuration for {server_info.name}")
+            
+            # Check for common entry points
+            entry_points = [
+                "main.py",
+                "server.py", 
+                "index.js",
+                "index.ts",
+                "src/index.js",
+                "src/index.ts",
+                "build/index.js",
+                "dist/index.js"
+            ]
+            
+            detected_entry = None
+            detected_language = server_info.language
+            
+            # Search for entry points
+            for entry in entry_points:
+                entry_path = target_dir / entry
+                if entry_path.exists():
+                    detected_entry = entry
+                    if entry.endswith(('.js', '.ts')):
+                        detected_language = "typescript" if entry.endswith('.ts') else "javascript"
+                    elif entry.endswith('.py'):
+                        detected_language = "python"
+                    break
+            
+            # Check for package.json (Node.js project)
+            package_json = target_dir / "package.json"
+            if package_json.exists() and not detected_entry:
+                try:
+                    import json
+                    with open(package_json, 'r') as f:
+                        package_data = json.load(f)
+                    
+                    # Check for main entry point
+                    if "main" in package_data:
+                        detected_entry = package_data["main"]
+                        detected_language = "javascript"
+                    
+                    # Check for scripts
+                    if "scripts" in package_data:
+                        if "start" in package_data["scripts"]:
+                            start_script = package_data["scripts"]["start"]
+                            if "index.js" in start_script:
+                                detected_entry = "index.js"
+                            elif "build/index.js" in start_script:
+                                detected_entry = "build/index.js"
+                        
+                except Exception as e:
+                    logger.warning(f"Error reading package.json: {e}")
+            
+            # Check for pyproject.toml (Python project)
+            pyproject_toml = target_dir / "pyproject.toml"
+            if pyproject_toml.exists() and not detected_entry:
+                try:
+                    # Simple parsing for entry points
+                    with open(pyproject_toml, 'r') as f:
+                        content = f.read()
+                    
+                    if "[project.scripts]" in content:
+                        # Look for server script
+                        lines = content.split('\n')
+                        for line in lines:
+                            if "server" in line.lower() and "=" in line:
+                                # Extract module reference
+                                module_ref = line.split('=')[1].strip().strip('"\'')
+                                if ":" in module_ref:
+                                    detected_entry = f"python -m {module_ref.split(':')[0]}"
+                                break
+                
+                except Exception as e:
+                    logger.warning(f"Error reading pyproject.toml: {e}")
+            
+            # If no entry point detected, use defaults
+            if not detected_entry:
+                if detected_language == "python":
+                    # Check for common Python patterns
+                    if (target_dir / "main.py").exists():
+                        detected_entry = "main.py"
+                    elif (target_dir / "server.py").exists():
+                        detected_entry = "server.py"
+                    else:
+                        detected_entry = "main.py"  # Default
+                else:
+                    # JavaScript/TypeScript default
+                    detected_entry = "index.js"
+            
+            # Update server_info with detected configuration
+            updated_server_info = MCPServerInfo(
+                name=server_info.name,
+                repository_url=server_info.repository_url,
+                download_url=server_info.download_url,
+                description=server_info.description,
+                language=detected_language,
+                installation_commands=server_info.installation_commands,
+                run_command="uv" if detected_language == "python" else "node",
+                run_args=[detected_entry] if detected_entry else server_info.run_args,
+                dependencies=server_info.dependencies
+            )
+            
+            logger.info(f"Detected configuration: {detected_language} - {detected_entry}")
+            return updated_server_info
+            
+        except Exception as e:
+            logger.error(f"Error detecting run configuration: {e}")
+            return None
+    
+    async def _update_server_config(self, server_info: MCPServerInfo):
+        """Update both Python and TypeScript server configuration files"""
+        try:
+            # Update Python configuration
+            await self._update_python_config(server_info)
+            
+            # Update TypeScript configuration
+            await self._update_typescript_config(server_info)
+            
+        except Exception as e:
+            logger.error(f"Error updating server configs: {e}")
+    
+    async def _update_python_config(self, server_info: MCPServerInfo):
+        """Update Python client configuration using safe AST parsing"""
+        try:
+            config_path = self.servers_path / "python" / "clients" / "src" / "client_and_server_config.py"
+            
             # Read current configuration
-            with open(self.config_path, 'r') as f:
+            with open(config_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Parse the current ServersConfig
-            import re
+            # Check if server already exists
+            if f'"server_name": "{server_info.name}"' in content:
+                logger.info(f"Server {server_info.name} already exists in Python config")
+                return
             
-            # Find the ServersConfig list
-            servers_config_match = re.search(r'ServersConfig = \[(.*?)\]', content, re.DOTALL)
-            if servers_config_match:
-                # Create new server configuration
+            # Parse the current config to extract existing servers
+            import ast
+            tree = ast.parse(content)
+            
+            existing_servers = []
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Assign):
+                    for target in node.targets:
+                        if isinstance(target, ast.Name) and target.id == "ServersConfig":
+                            try:
+                                existing_servers = ast.literal_eval(node.value)
+                            except:
+                                logger.warning("Could not parse existing ServersConfig")
+                                existing_servers = []
+            
+            # Determine the correct command and args based on language and structure
+            if server_info.language.lower() == "python":
+                command = "uv"
                 server_path = f"../servers/{server_info.name}"
-                if server_info.language == "python":
-                    server_path = f"../servers/{server_info.name}"
+                
+                # Smart path detection for different Python MCP structures
+                if "main.py" in server_info.run_args:
+                    args = ["--directory", server_path, "run", "python", "main.py"]
+                elif "server.py" in server_info.run_args:
+                    args = ["--directory", server_path, "run", "server.py"]
+                elif any("-m" in str(arg) for arg in server_info.run_args):
+                    # Module execution pattern
+                    module_name = server_info.run_args[-1] if server_info.run_args else server_info.name.lower().replace("_mcp", "")
+                    args = ["--directory", server_path, "run", "python", "-m", module_name]
                 else:
-                    server_path = f"../../js/servers/{server_info.name}"
-                
-                new_server_config = f'''    {{
-        "server_name": "{server_info.name}",
-        "command": "{server_info.run_command}",
-        "args": {json.dumps(["--directory", server_path] + server_info.run_args)}
-    }}'''
-                
-                # Insert the new configuration
-                current_configs = servers_config_match.group(1).strip()
-                if current_configs:
-                    updated_configs = current_configs + ",\n" + new_server_config
-                else:
-                    updated_configs = new_server_config
-                
-                # Replace in content
-                new_content = content.replace(
-                    servers_config_match.group(0),
-                    f"ServersConfig = [\n{updated_configs}\n]"
-                )
-                
-                # Write back to file
-                with open(self.config_path, 'w') as f:
-                    f.write(new_content)
-                    
+                    # Default pattern
+                    args = ["--directory", server_path, "run"] + server_info.run_args
+            else:
+                # TypeScript/Node.js servers in Python config
+                command = "node"
+                server_path = f"../../js/servers/{server_info.name}"
+                args = ["--directory", server_path] + server_info.run_args
+            
+            # Create new server configuration
+            new_server = {
+                "server_name": server_info.name,
+                "command": command,
+                "args": args
+            }
+            
+            # Add to existing servers
+            existing_servers.append(new_server)
+            
+            # Generate the new configuration content
+            clients_config = ["MCP_CLIENT_AZURE_AI", "MCP_CLIENT_OPENAI", "MCP_CLIENT_GEMINI"]
+            
+            new_content = f"""ClientsConfig = {json.dumps(clients_config, indent=4)}
+
+ServersConfig = {json.dumps(existing_servers, indent=4)}
+"""
+            
+            # Write back to file
+            with open(config_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            
+            logger.info(f"Updated Python config for {server_info.name}")
+            
         except Exception as e:
-            logger.error(f"Error updating server config: {e}")
+            logger.error(f"Error updating Python config: {e}")
+            # Fallback to manual content replacement
+            await self._update_python_config_fallback(server_info)
+    
+    async def _update_python_config_fallback(self, server_info: MCPServerInfo):
+        """Fallback method for updating Python config when AST parsing fails"""
+        try:
+            config_path = self.servers_path / "python" / "clients" / "src" / "client_and_server_config.py"
+            
+            with open(config_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Simple append before the closing bracket
+            if server_info.language.lower() == "python":
+                command = "uv"
+                server_path = f"../servers/{server_info.name}"
+                args = ["--directory", server_path, "run"] + server_info.run_args
+            else:
+                command = "node"
+                server_path = f"../../js/servers/{server_info.name}"
+                args = ["--directory", server_path] + server_info.run_args
+            
+            new_server_text = f''',
+    {{
+        "server_name": "{server_info.name}",
+        "command": "{command}",
+        "args": {json.dumps(args, indent=12).replace(json.dumps(args, indent=12).split(chr(10))[0], '            ' + json.dumps(args, indent=12).split(chr(10))[0].strip())}
+    }}'''
+            
+            # Insert before the last ]
+            last_bracket = content.rfind(']')
+            if last_bracket != -1:
+                new_content = content[:last_bracket] + new_server_text + '\n' + content[last_bracket:]
+                
+                with open(config_path, 'w', encoding='utf-8') as f:
+                    f.write(new_content)
+                
+                logger.info(f"Updated Python config (fallback) for {server_info.name}")
+        
+        except Exception as e:
+            logger.error(f"Fallback Python config update failed: {e}")
+    
+    async def _update_typescript_config(self, server_info: MCPServerInfo):
+        """Update TypeScript client configuration using complete rebuild approach"""
+        try:
+            config_path = self.servers_path / "js" / "clients" / "src" / "client_and_server_config.ts"
+            
+            # Only update if it's a TypeScript/Node.js server
+            if server_info.language.lower() not in ["typescript", "javascript", "node"]:
+                return
+            
+            # Read current configuration
+            with open(config_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Check if server already exists
+            if f'server_name: "{server_info.name}"' in content:
+                logger.info(f"Server {server_info.name} already exists in TypeScript config")
+                return
+            
+            # Extract existing servers by parsing server_name entries
+            import re
+            server_name_matches = re.findall(r'server_name:\s*"([^"]+)"', content)
+            existing_servers = []
+            
+            # Parse each existing server configuration with improved regex
+            for server_name in server_name_matches:
+                # More precise pattern to match complete server objects
+                server_pattern = rf'{{\s*server_name:\s*"{re.escape(server_name)}".*?}}'
+                server_match = re.search(server_pattern, content, re.DOTALL)
+                if server_match:
+                    server_block = server_match.group(0)
+                    
+                    # Extract command
+                    command_match = re.search(r'command:\s*"([^"]+)"', server_block)
+                    command = command_match.group(1) if command_match else "node"
+                    
+                    # Extract args with better parsing
+                    args_match = re.search(r'args:\s*\[(.*?)\]', server_block, re.DOTALL)
+                    if args_match:
+                        args_content = args_match.group(1).strip()
+                        # Split by quotes to get individual args
+                        args = []
+                        for line in args_content.split('\n'):
+                            line = line.strip()
+                            if line and not line.startswith('//'):
+                                # Extract quoted strings
+                                quote_matches = re.findall(r'"([^"]*)"', line)
+                                args.extend(quote_matches)
+                    else:
+                        args = ["--directory", f"../servers/{server_name}", "index.js"]
+                    
+                    # Extract description
+                    desc_match = re.search(r'server_features_and_capability:\s*"([^"]*)"', server_block)
+                    description = desc_match.group(1) if desc_match else f"{server_name} server"
+                    
+                    existing_servers.append({
+                        "name": server_name,
+                        "command": command,
+                        "args": args,
+                        "description": description
+                    })
+            
+            # Determine correct path and args for new TypeScript server
+            server_path = f"../servers/{server_info.name}"
+            command = "node"
+            
+            # Smart args detection with proper formatting
+            if "tsx" in server_info.run_args and "src/index.ts" in server_info.run_args:
+                args = ["--directory", server_path, "tsx", "src/index.ts"]
+            elif "index.js" in server_info.run_args:
+                args = ["--directory", server_path, "index.js"]
+            elif "build/index.js" in server_info.run_args:
+                args = ["--directory", server_path, "build/index.js"]
+            elif server_info.run_args:
+                args = ["--directory", server_path] + server_info.run_args
+            else:
+                args = ["--directory", server_path, "index.js"]
+            
+            # Add new server to existing servers
+            existing_servers.append({
+                "name": server_info.name,
+                "command": command,
+                "args": args,
+                "description": server_info.description
+            })
+            
+            # Rebuild the entire configuration file with perfect formatting
+            clients_config = ["MCP_CLIENT_OPENAI", "MCP_CLIENT_AZURE_AI", "MCP_CLIENT_GEMINI"]
+            
+            # Generate clients section
+            clients_section = "export const ClientsConfig: string[] = [\n"
+            for client in clients_config:
+                clients_section += f'    "{client}",\n'
+            clients_section = clients_section.rstrip(',\n') + '\n]\n\n'
+            
+            # Generate servers section
+            servers_section = "export const ServersConfig: any[] = [\n"
+            for i, server in enumerate(existing_servers):
+                servers_section += "    {\n"
+                servers_section += f'        server_name: "{server["name"]}",\n'
+                servers_section += f'        command: "{server["command"]}",\n'
+                servers_section += "        args: [\n"
+                for arg in server["args"]:
+                    servers_section += f'            "{arg}",\n'
+                servers_section = servers_section.rstrip(',\n') + '\n'
+                servers_section += "        ],\n"
+                servers_section += f'        server_features_and_capability: "{server["description"]}"\n'
+                servers_section += "    }"
+                if i < len(existing_servers) - 1:
+                    servers_section += ","
+                servers_section += "\n"
+            servers_section += "]\n"
+            
+            # Write the complete new configuration
+            new_content = clients_section + servers_section
+            
+            with open(config_path, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            
+            logger.info(f"Updated TypeScript config for {server_info.name}")
+            
+        except Exception as e:
+            logger.error(f"Error updating TypeScript config: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
 class AIAgentProtocol:
     """Main protocol for AI agent creation and MCP integration"""

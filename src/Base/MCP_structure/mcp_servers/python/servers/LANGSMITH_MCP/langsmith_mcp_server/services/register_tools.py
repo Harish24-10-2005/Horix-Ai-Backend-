@@ -17,28 +17,9 @@ from langsmith_mcp_server.services.tools.traces import (
     get_project_runs_stats_tool,
     get_thread_history_tool,
 )
-from langsmith_mcp_server.langsmith_client import LangSmithClient
 
 
-def get_client_from_credentials(credentials: Dict[str, Any]) -> Any:
-    """
-    Create a LangSmith client from the provided credentials.
-    
-    Args:
-        credentials: Dictionary containing access_token and other auth info
-        
-    Returns:
-        LangSmith client instance or None if credentials are invalid
-    """
-    access_token = credentials.get("access_token")
-    if not access_token:
-        raise ValueError("access_token is required in credentials")
-    
-    langsmith_client = LangSmithClient(access_token)
-    return langsmith_client.get_client()
-
-
-def register_tools(mcp, langsmith_client=None):
+def register_tools(mcp, langsmith_client):
     """
     Register all LangSmith tool-related functionality with the MCP server.
     This function configures and registers various tools for interacting with LangSmith,
@@ -46,11 +27,17 @@ def register_tools(mcp, langsmith_client=None):
 
     Args:
         mcp: The MCP server instance to register tools with
-        langsmith_client: The LangSmith client instance for API access (optional, will be created from credentials)
+        langsmith_client: The LangSmith client instance for API access
     """
 
+    # Skip registration if client is not initialized
+    if langsmith_client is None:
+        return
+
+    client = langsmith_client.get_client()
+
     @mcp.tool()
-    def list_prompts(is_public: str = "false", limit: int = 20, credentials: Dict[str, Any] = None) -> Dict[str, Any]:
+    def list_prompts(is_public: str = "false", limit: int = 20) -> Dict[str, Any]:
         """
         Fetch prompts from LangSmith with optional filtering.
 
@@ -58,40 +45,36 @@ def register_tools(mcp, langsmith_client=None):
             is_public (str): Filter by prompt visibility - "true" for public prompts,
                             "false" for private prompts (default: "false")
             limit (int): Maximum number of prompts to return (default: 20)
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the prompts and metadata
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             is_public_bool = is_public.lower() == "true"
             return list_prompts_tool(client, is_public_bool, limit)
         except Exception as e:
             return {"error": str(e)}
 
     @mcp.tool()
-    def get_prompt_by_name(prompt_name: str, credentials: Dict[str, Any] = None) -> Dict[str, Any]:
+    def get_prompt_by_name(prompt_name: str) -> Dict[str, Any]:
         """
         Get a specific prompt by its exact name.
 
         Args:
             prompt_name (str): The exact name of the prompt to retrieve
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the prompt details and template,
                           or an error message if the prompt cannot be found
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return get_prompt_tool(client, prompt_name=prompt_name)
         except Exception as e:
             return {"error": str(e)}
 
     # Register conversation tools
     @mcp.tool()
-    def get_thread_history(thread_id: str, project_name: str, credentials: Dict[str, Any] = None) -> Dict[str, Any]:
+    def get_thread_history(thread_id: str, project_name: str) -> Dict[str, Any]:
         """
         Retrieve the message history for a specific conversation thread.
 
@@ -99,21 +82,19 @@ def register_tools(mcp, langsmith_client=None):
             thread_id (str): The unique ID of the thread to fetch history for
             project_name (str): The name of the project containing the thread
                                (format: "owner/project" or just "project")
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the thread history,
                                 or an error message if the thread cannot be found
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return get_thread_history_tool(client, thread_id, project_name)
         except Exception as e:
             return {"error": str(e)}
 
     # Register analytics tools
     @mcp.tool()
-    def get_project_runs_stats(project_name: str, is_last_run: str = "true", credentials: Dict[str, Any] = None) -> Dict[str, Any]:
+    def get_project_runs_stats(project_name: str, is_last_run: str = "true") -> Dict[str, Any]:
         """
         Get statistics about runs in a LangSmith project.
 
@@ -122,14 +103,12 @@ def register_tools(mcp, langsmith_client=None):
                               (format: "owner/project" or just "project")
             is_last_run (str): Set to "true" to get only the last run's stats,
                              set to "false" for overall project stats (default: "true")
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the requested project run statistics
                           or an error message if statistics cannot be retrieved
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             is_last_run_bool = is_last_run.lower() == "true"
             return get_project_runs_stats_tool(client, project_name, is_last_run_bool)
         except Exception as e:
@@ -137,7 +116,7 @@ def register_tools(mcp, langsmith_client=None):
 
     # Register trace tools
     @mcp.tool()
-    def fetch_trace(project_name: str = None, trace_id: str = None, credentials: Dict[str, Any] = None) -> Dict[str, Any]:
+    def fetch_trace(project_name: str = None, trace_id: str = None) -> Dict[str, Any]:
         """
         Fetch trace content for debugging and analyzing LangSmith runs.
 
@@ -148,14 +127,12 @@ def register_tools(mcp, langsmith_client=None):
         Args:
             project_name (str, optional): The name of the project to fetch the latest trace from
             trace_id (str, optional): The specific ID of the trace to fetch (preferred parameter)
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the trace data and metadata,
                           or an error message if the trace cannot be found
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return fetch_trace_tool(client, project_name, trace_id)
         except Exception as e:
             return {"error": str(e)}
@@ -169,7 +146,6 @@ def register_tools(mcp, langsmith_client=None):
         dataset_name_contains: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         limit: int = 20,
-        credentials: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """
         Fetch LangSmith datasets.
@@ -183,14 +159,12 @@ def register_tools(mcp, langsmith_client=None):
             dataset_name_contains (Optional[str]): Filter by substring in dataset name
             metadata (Optional[Dict[str, Any]]): Filter by metadata dict
             limit (int): Max number of datasets to return (default: 20)
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the datasets and metadata,
                             or an error message if the datasets cannot be retrieved
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return list_datasets_tool(
                 client,
                 dataset_ids=dataset_ids,
@@ -216,7 +190,6 @@ def register_tools(mcp, langsmith_client=None):
         as_of: Optional[str] = None,
         limit: Optional[int] = None,
         offset: Optional[int] = None,
-        credentials: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """
         Fetch examples from a LangSmith dataset with advanced filtering options.
@@ -236,14 +209,12 @@ def register_tools(mcp, langsmith_client=None):
             inline_s3_urls (Optional[bool]): Whether to inline S3 URLs (default: SDK default if not specified)
             include_attachments (Optional[bool]): Whether to include attachments in response (default: SDK default if not specified)
             as_of (Optional[str]): Dataset version tag OR ISO timestamp to retrieve examples as of that version/time
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the examples and metadata,
                             or an error message if the examples cannot be retrieved
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return list_examples_tool(
                 client,
                 dataset_id=dataset_id,
@@ -265,7 +236,6 @@ def register_tools(mcp, langsmith_client=None):
     def read_dataset(
         dataset_id: Optional[str] = None,
         dataset_name: Optional[str] = None,
-        credentials: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """
         Read a specific dataset from LangSmith.
@@ -276,14 +246,12 @@ def register_tools(mcp, langsmith_client=None):
         Args:
             dataset_id (Optional[str]): Dataset ID to retrieve
             dataset_name (Optional[str]): Dataset name to retrieve
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the dataset details,
                             or an error message if the dataset cannot be retrieved
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return read_dataset_tool(
                 client,
                 dataset_id=dataset_id,
@@ -296,7 +264,6 @@ def register_tools(mcp, langsmith_client=None):
     def read_example(
         example_id: str,
         as_of: Optional[str] = None,
-        credentials: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """
         Read a specific example from LangSmith.
@@ -304,14 +271,12 @@ def register_tools(mcp, langsmith_client=None):
         Args:
             example_id (str): Example ID to retrieve
             as_of (Optional[str]): Dataset version tag OR ISO timestamp to retrieve the example as of that version/time
-            credentials (Dict[str, Any]): Authentication credentials
 
         Returns:
             Dict[str, Any]: Dictionary containing the example details,
                             or an error message if the example cannot be retrieved
         """
         try:
-            client = get_client_from_credentials(credentials or {})
             return read_example_tool(
                 client,
                 example_id=example_id,
