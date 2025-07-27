@@ -1,11 +1,4 @@
-# Vanij MCP Platform
-
-## 🚀 [MCP Integration Demo Video. (watch here)](https://drive.google.com/file/d/14JvBERtsT1ed1Db5GCDLllqdW5BL684S/view?usp=sharing)
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg)](https://nodejs.org/)
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/)
-
+## Config Mcp Servers
 A comprehensive Model Context Protocol (MCP) platform providing standardized integrations between AI assistants and various services and APIs. This repository contains both JavaScript and Python implementations of MCP servers and clients for seamless service integration.
 
 ## 📋 Table of Contents
@@ -25,7 +18,7 @@ A comprehensive Model Context Protocol (MCP) platform providing standardized int
 
 ## 🌟 Overview
 
-The Vanij MCP Platform enables AI assistants to interact with external services through a standardized protocol. It provides a unified interface for connecting to various APIs and services, making it easier to build sophisticated AI-powered applications.
+The Horix Ai MCP Platform enables AI assistants to interact with external services through a standardized protocol. It provides a unified interface for connecting to various APIs and services, making it easier to build sophisticated AI-powered applications.
 
 ## ✨ Features
 
@@ -263,42 +256,3 @@ The `postman_api_collections/` directory contains Postman collections for testin
 2. Configure environment variables
 3. Test API endpoints
 4. Validate integrations
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
-4. **Push** to the branch (`git push origin feature/amazing-feature`)
-5. **Open** a Pull Request
-
-### Development Guidelines
-
-- Follow existing code style and conventions
-- Add tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting PR
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation**: Check the `mcp_servers_documentation/` directory
-- **Issues**: Open an issue on GitHub
-- **Discussions**: Use GitHub Discussions for questions
-
-## 🏗️ Roadmap
-
-- [ ] Additional language implementations (Go, Rust)
-- [ ] More third-party service integrations
-- [ ] Enhanced monitoring and logging
-- [ ] Docker containerization
-- [ ] Kubernetes deployment guides
-
----
-
-**Built with ❤️ by the Vanij Team**
