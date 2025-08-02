@@ -204,6 +204,9 @@ class MCPServerManager:
                 detected_info = await self._detect_run_configuration(target_dir, server_info)
                 if detected_info:
                     server_info = detected_info
+                
+                # Collect README files after successful download
+                await self._collect_readme_documentation(server_info.name, target_dir, server_info.language, server_info.repository_url)
                     
             except Exception as download_error:
                 logger.warning(f"Download failed for {server_info.name}: {download_error}")
@@ -661,6 +664,34 @@ ServersConfig = {json.dumps(existing_servers, indent=4)}
             logger.error(f"Error updating TypeScript config: {e}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
+    
+    async def _collect_readme_documentation(self, server_name: str, server_path: Path, language: str, repository_url: str = ""):
+        """Collect README documentation for the newly downloaded MCP server"""
+        try:
+            # Import readme manager
+            import sys
+            sys.path.append(str(Path(__file__).parent.parent))
+            from readme_manager import MCPReadmeManager
+            
+            # Initialize README manager
+            readme_manager = MCPReadmeManager(str(self.base_path))
+            
+            # Collect README after download
+            success = readme_manager.collect_readme_after_download(
+                server_name=server_name,
+                server_path=server_path,
+                language=language,
+                repository_url=repository_url
+            )
+            
+            if success:
+                logger.info(f"✅ README documentation collected for {server_name}")
+            else:
+                logger.info(f"📝 Placeholder README created for {server_name}")
+                
+        except Exception as e:
+            logger.error(f"Error collecting README documentation for {server_name}: {e}")
+            # Don't fail the entire process if README collection fails
 
 class AIAgentProtocol:
     """Main protocol for AI agent creation and MCP integration"""
@@ -721,6 +752,33 @@ class AIAgentProtocol:
     def list_agents(self) -> List[Dict[str, Any]]:
         """List all created agents"""
         return list(self.agents.values())
+    
+    async def _collect_readme_documentation(self, server_name: str, server_path: Path, language: str, repository_url: str = ""):
+        """Collect README documentation after MCP server installation"""
+        try:
+            # Import README manager (lazy import to avoid circular dependencies)
+            import sys
+            sys.path.append(str(Path(__file__).parent.parent))
+            from readme_manager import MCPReadmeManager
+            
+            # Initialize README manager
+            readme_manager = MCPReadmeManager(str(self.base_path))
+            
+            # Collect README files
+            success = readme_manager.collect_readme_after_download(
+                server_name=server_name,
+                server_path=server_path,
+                language=language,
+                repository_url=repository_url
+            )
+            
+            if success:
+                logger.info(f"📚 README documentation collected for {server_name}")
+            else:
+                logger.warning(f"📚 Could not collect README for {server_name} (placeholder created)")
+                
+        except Exception as e:
+            logger.error(f"Error collecting README documentation for {server_name}: {e}")
 
 # Example usage functions
 async def create_langsmith_monitoring_agent(protocol: AIAgentProtocol) -> Dict[str, Any]:

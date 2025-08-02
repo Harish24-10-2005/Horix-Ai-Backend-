@@ -60,5 +60,15 @@ export const ServersConfig: any[] = [
             "index.js"
         ],
         server_features_and_capability: "MCP Server for YouTube API, enabling video management, Shorts creation, and advanced analytics"
+    },
+    {
+        server_name: "test-readme-automation",
+        command: "node",
+        args: [
+            "--directory",
+            "../servers/test-readme-automation",
+            "index.js"
+        ],
+        server_features_and_capability: "Chrome MCP Server for testing README automation"
     }
 ]

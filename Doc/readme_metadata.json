@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-08-03T00:13:40.726205",
+  "total_mcps": 1,
+  "mcp_readmes": {
+    "youtube_video_mcp": {
+      "filename": "youtube_video_mcp_README.md",
+      "language": "python",
+      "repository_url": "https://github.com/yug-space/youtube_video_mcp",
+      "source_path": "ReadMe.md",
+      "collected_at": "2025-08-03T00:13:40.726205",
+      "file_size": 2686
+    }
+  },
+  "statistics": {
+    "python_mcps": 1,
+    "javascript_mcps": 0,
+    "typescript_mcps": 0,
+    "total_readme_files": 1
+  }
+}

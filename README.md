@@ -33,6 +33,7 @@
 - **Create AI agents automatically** - For monitoring, development, team work
 - **Manage 13+ built-in MCP servers** - GitHub, Slack, Notion, Email, etc.
 - **Search and install from GitHub** - Finds the best MCP servers automatically
+- **Automatic documentation collection** - README files automatically organized
 
 ### 💡 **Real Examples**
 ```bash
@@ -317,7 +318,51 @@ asyncio.run(protocol.list_available_mcp_servers())
 
 ---
 
-## 📖 Detailed Mode Documentation
+## � Documentation Features
+
+### **Automatic README Collection**
+Every time you download an MCP server, the system automatically:
+
+1. **🔍 Searches** for README files in the server directory
+2. **📄 Copies** README files to `Doc/` folder  
+3. **✨ Enhances** content with integration notes and usage examples
+4. **📋 Updates** main documentation index (`Doc/README_FOR_ALL_MCP.md`)
+5. **📊 Tracks** statistics and metadata (`Doc/readme_metadata.json`)
+
+### **Enhanced Documentation**
+Each collected README includes:
+- **Original Content:** Full original README preserved
+- **Integration Notes:** How to use the MCP in your system
+- **Usage Examples:** Natural language commands to access the MCP
+- **Configuration Info:** Where files are located and how they're configured
+- **Management Commands:** How to validate and check the MCP status
+
+### **Organization System**
+```
+Doc/
+├── README_FOR_ALL_MCP.md          # Main index of all documentation
+├── readme_metadata.json           # Statistics and tracking data
+├── LANGSMITH_MCP_README.md        # Individual MCP documentation
+├── GITHUB_MCP_README.md
+├── FILESYSTEM_MCP_README.md
+└── ... (one file per MCP server)
+```
+
+### **Manual Collection Commands**
+```bash
+# Collect READMEs from existing MCP servers
+python collect_readmes.py
+
+# Demo the README automation system
+python demo_readme_automation.py
+
+# Test the automation integration
+python test_readme_automation.py
+```
+
+---
+
+## �📖 Detailed Mode Documentation
 
 ### 🎯 **Mode 1: Comprehensive Demo - Complete Walkthrough**
 

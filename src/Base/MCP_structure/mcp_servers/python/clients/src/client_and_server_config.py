@@ -52,5 +52,32 @@ ServersConfig = [
             "main.py"
         ],
         "env": {}
+    },
+    {
+        "server_name": "mcp-chrome",
+        "command": "node",
+        "args": [
+            "../servers/mcp-chrome/build/index.js"
+        ],
+        "env": {}
+    },
+    {
+        "server_name": "test-readme-automation",
+        "command": "node",
+        "args": [
+            "../servers/test-readme-automation/build/index.js"
+        ],
+        "env": {}
+    },
+    {
+        "server_name": "youtube_video_mcp",
+        "command": "uv",
+        "args": [
+            "--directory",
+            "../servers/youtube_video_mcp",
+            "run",
+            "main.py"
+        ],
+        "env": {}
     }
 ]
