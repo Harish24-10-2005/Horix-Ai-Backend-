@@ -54,8 +54,37 @@ node_modules/
 credentials.json
 config.json
 
-# MCP server installations (keep registry, ignore downloads)
+# ===========================================
+# MCP SERVERS - DO NOT PUSH TO GITHUB
+# ===========================================
+
+# All downloaded/installed MCP servers in Python directory
+src/Base/MCP_structure/mcp_servers/python/servers/*
+!src/Base/MCP_structure/mcp_servers/python/servers/.gitkeep
+
+# All downloaded/installed MCP servers in JavaScript directory  
+src/Base/MCP_structure/mcp_servers/js/servers/*
+!src/Base/MCP_structure/mcp_servers/js/servers/.gitkeep
+
+# MCP server dependencies and build artifacts
 src/Base/MCP_structure/mcp_servers/*/node_modules/
 src/Base/MCP_structure/mcp_servers/*/.git/
 src/Base/MCP_structure/mcp_servers/*/venv/
 src/Base/MCP_structure/mcp_servers/*/__pycache__/
+src/Base/MCP_structure/mcp_servers/**/*.pyc
+src/Base/MCP_structure/mcp_servers/**/dist/
+src/Base/MCP_structure/mcp_servers/**/build/
+
+# Temporary download files
+src/Base/MCP_structure/mcp_servers/**/*.zip
+src/Base/MCP_structure/mcp_servers/**/temp.*
+src/Base/MCP_structure/mcp_servers/**/tmp.*
+
+# MCP server logs and runtime files
+src/Base/MCP_structure/mcp_servers/**/*.log
+src/Base/MCP_structure/mcp_servers/**/.env
+src/Base/MCP_structure/mcp_servers/**/.env.*
+
+# Keep only the client configuration and structure
+!src/Base/MCP_structure/mcp_servers/python/clients/
+!src/Base/MCP_structure/mcp_servers/js/clients/

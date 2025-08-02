@@ -1,0 +1,5 @@
+# This file ensures the servers directory is tracked by git
+# but all downloaded MCP servers are ignored
+# 
+# Downloaded MCP servers will be placed in this directory
+# but won't be committed to the repository

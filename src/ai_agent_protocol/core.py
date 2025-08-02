@@ -395,6 +395,30 @@ class MCPServerManager:
             logger.error(f"Error updating server configs: {e}")
     
     async def _update_python_config(self, server_info: MCPServerInfo):
+        """Update Python client configuration using enhanced config manager"""
+        try:
+            # Import the enhanced configuration manager
+            import sys
+            sys.path.append(str(Path(__file__).parent.parent))
+            from enhanced_config_manager import MCPConfigurationManager
+            
+            # Use the enhanced manager for robust updates
+            manager = MCPConfigurationManager(str(self.base_path / "src"))
+            success = manager.update_python_config(server_info.name, server_info.language)
+            
+            if success:
+                logger.info(f"Successfully updated Python config for {server_info.name}")
+            else:
+                logger.error(f"Failed to update Python config for {server_info.name}")
+                # Fallback to original method
+                await self._update_python_config_original(server_info)
+                
+        except Exception as e:
+            logger.error(f"Error with enhanced config update: {e}")
+            # Fallback to original method
+            await self._update_python_config_original(server_info)
+    
+    async def _update_python_config_original(self, server_info: MCPServerInfo):
         """Update Python client configuration using safe AST parsing"""
         try:
             config_path = self.servers_path / "python" / "clients" / "src" / "client_and_server_config.py"
