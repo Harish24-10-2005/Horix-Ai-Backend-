@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "last_updated": "2025-08-03T00:13:40.726205",
-  "total_mcps": 1,
+  "last_updated": "2025-08-17T20:53:38.066961",
+  "total_mcps": 4,
   "mcp_readmes": {
     "youtube_video_mcp": {
       "filename": "youtube_video_mcp_README.md",
@@ -10,12 +10,36 @@
       "source_path": "ReadMe.md",
       "collected_at": "2025-08-03T00:13:40.726205",
       "file_size": 2686
+    },
+    "mcp-git-ingest": {
+      "filename": "mcp-git-ingest_README.md",
+      "language": "Python",
+      "repository_url": "https://github.com/adhikasp/mcp-git-ingest",
+      "source_path": "ReadMe.md",
+      "collected_at": "2025-08-03T00:42:50.097555",
+      "file_size": 5678
+    },
+    "manim-mcp": {
+      "filename": "manim-mcp_README.md",
+      "language": "Python",
+      "repository_url": "https://github.com/wstcpyt/manim-mcp",
+      "source_path": "ReadMe.md",
+      "collected_at": "2025-08-17T17:52:23.530495",
+      "file_size": 7565
+    },
+    "mcp-wikipedia": {
+      "filename": "mcp-wikipedia_README.md",
+      "language": "python",
+      "repository_url": "https://github.com/algonacci/mcp-wikipedia",
+      "source_path": "ReadMe.md",
+      "collected_at": "2025-08-17T20:53:38.065970",
+      "file_size": 1946
     }
   },
   "statistics": {
-    "python_mcps": 1,
+    "python_mcps": 4,
     "javascript_mcps": 0,
     "typescript_mcps": 0,
-    "total_readme_files": 1
+    "total_readme_files": 4
   }
 }

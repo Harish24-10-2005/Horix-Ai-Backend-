@@ -288,6 +288,15 @@ async def get_available_templates():
         ]
     }
 
-if __name__ == "__main__":
+def main():
+    """Start the API server.
+
+    Matches the console script entry in pyproject.toml: ai-agent-api
+    """
     import uvicorn
+    # Run directly with the app instance to avoid module import string issues
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+if __name__ == "__main__":
+    main()

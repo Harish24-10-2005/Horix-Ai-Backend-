@@ -207,6 +207,9 @@ class MCPServerManager:
                 
                 # Collect README files after successful download
                 await self._collect_readme_documentation(server_info.name, target_dir, server_info.language, server_info.repository_url)
+                
+                # AI-powered auto-configuration after successful download
+                await self._auto_configure_downloaded_mcp(server_info)
                     
             except Exception as download_error:
                 logger.warning(f"Download failed for {server_info.name}: {download_error}")
@@ -692,6 +695,40 @@ ServersConfig = {json.dumps(existing_servers, indent=4)}
         except Exception as e:
             logger.error(f"Error collecting README documentation for {server_name}: {e}")
             # Don't fail the entire process if README collection fails
+    
+    async def _auto_configure_downloaded_mcp(self, server_info: MCPServerInfo):
+        """Auto-configure MCP server after download using AI agent"""
+        try:
+            # Import the auto-configuration agent
+            import sys
+            sys.path.append(str(Path(__file__).parent.parent))
+            from mcp_auto_config_agent import MCPAutoConfigAgent
+            
+            logger.info(f"🤖 Starting AI-powered auto-configuration for {server_info.name}")
+            
+            # Initialize the auto-config agent
+            config_agent = MCPAutoConfigAgent(str(self.base_path))
+            
+            if not config_agent.llm:
+                logger.info(f"ℹ️ No LLM available for auto-configuration of {server_info.name}")
+                return False
+            
+            # Auto-configure the MCP server
+            success = await config_agent.auto_configure_new_mcp(server_info.name)
+            
+            if success:
+                logger.info(f"✅ AI auto-configuration completed successfully for {server_info.name}")
+            else:
+                logger.warning(f"⚠️ AI auto-configuration failed for {server_info.name}")
+                
+            return success
+            
+        except ImportError:
+            logger.info(f"📦 Auto-configuration agent not available for {server_info.name}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Auto-configuration error for {server_info.name}: {e}")
+            return False
 
 class AIAgentProtocol:
     """Main protocol for AI agent creation and MCP integration"""

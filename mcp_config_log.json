@@ -1,0 +1,91 @@
+[
+  {
+    "timestamp": "2025-08-03T00:35:41.819208",
+    "mcp_name": "youtube_video_mcp",
+    "status": "SUCCESS",
+    "error": null,
+    "config": {
+      "server_name": "youtube_video_mcp",
+      "command": "python",
+      "language": "python",
+      "dependencies": [
+        "youtube-transcript-api",
+        "mcp[fastmcp]"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-03T00:36:55.612256",
+    "mcp_name": "youtube_video_mcp",
+    "status": "SUCCESS",
+    "error": null,
+    "config": {
+      "server_name": "youtube_video_mcp",
+      "command": "python",
+      "language": "python",
+      "dependencies": [
+        "youtube-transcript-api",
+        "mcp[fastmcp]"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-03T00:42:53.464349",
+    "mcp_name": "mcp-git-ingest",
+    "status": "SUCCESS",
+    "error": null,
+    "config": {
+      "server_name": "mcp-git-ingest",
+      "command": "uvx",
+      "language": "python",
+      "dependencies": [
+        "fastmcp",
+        "gitpython"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-03T00:43:33.930047",
+    "mcp_name": "mcp-git-ingest",
+    "status": "SUCCESS",
+    "error": null,
+    "config": {
+      "server_name": "mcp-git-ingest",
+      "command": "uvx",
+      "language": "python",
+      "dependencies": [
+        "fastmcp",
+        "gitpython"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-03T00:43:34.422361",
+    "mcp_name": "youtube_video_mcp",
+    "status": "SUCCESS",
+    "error": null,
+    "config": {
+      "server_name": "youtube_video_mcp",
+      "command": "python",
+      "language": "python",
+      "dependencies": [
+        "youtube-transcript-api",
+        "mcp[fastmcp]"
+      ]
+    }
+  },
+  {
+    "timestamp": "2025-08-17T20:53:39.876619",
+    "mcp_name": "mcp-wikipedia",
+    "status": "SUCCESS",
+    "error": null,
+    "config": {
+      "server_name": "mcp-wikipedia",
+      "command": "python",
+      "language": "python",
+      "dependencies": [
+        "uv"
+      ]
+    }
+  }
+]

@@ -23,5 +23,5 @@ dev = [
 ]
 
 [project.scripts]
-ai-agent = "src.ai_agent_protocol.cli:main"
-ai-agent-api = "src.ai_agent_protocol.api:main"
+ai-agent = "ai_agent_protocol.cli:main"
+ai-agent-api = "ai_agent_protocol.api:main"

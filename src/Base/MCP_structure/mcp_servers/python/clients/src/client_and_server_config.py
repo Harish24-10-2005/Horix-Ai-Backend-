@@ -6,78 +6,28 @@ ClientsConfig = [
 
 ServersConfig = [
     {
-        "server_name": "LANGSMITH_MCP",
-        "command": "uvx",
-        "args": [
-            "langsmith-mcp-server"
-        ],
-        "env": {
-            "LANGSMITH_API_KEY": "lsv2_demo_key_for_testing"
-        }
-    },
-    {
-        "server_name": "mcp-context-forge",
-        "command": "uv",
-        "args": [
-            "--directory",
-            "../servers/mcp-context-forge",
-            "run",
-            "main.py"
-        ],
+        "server_name": "manim-mcp",
+        "command": "python",
+        "args": ["-m", "manim-mcp"],
         "env": {}
     },
     {
-        "server_name": "youtube-mcp-server",
-        "command": "node",
-        "args": [
-            "../servers/youtube-mcp-server/build/index.js"
-        ],
-        "env": {}
-    },
-    {
-        "server_name": "1Panel",
-        "command": "node",
-        "args": [
-            "../servers/1Panel/build/index.js"
-        ],
-        "env": {}
-    },
-    {
-        "server_name": "mcp-server-docker",
-        "command": "uv",
-        "args": [
-            "--directory",
-            "../servers/mcp-server-docker",
-            "run",
-            "main.py"
-        ],
-        "env": {}
-    },
-    {
-        "server_name": "mcp-chrome",
-        "command": "node",
-        "args": [
-            "../servers/mcp-chrome/build/index.js"
-        ],
-        "env": {}
-    },
-    {
-        "server_name": "test-readme-automation",
-        "command": "node",
-        "args": [
-            "../servers/test-readme-automation/build/index.js"
-        ],
+        "server_name": "mcp-git-ingest",
+        "command": "python",
+        "args": ["-m", "mcp-git-ingest"],
         "env": {}
     },
     {
         "server_name": "youtube_video_mcp",
         "command": "uv",
-        "args": [
-            "--directory",
-            "../servers/youtube_video_mcp",
-            "run",
-            "main.py"
-        ],
+        "args": ["--directory", "../servers/youtube_video_mcp", "run", "python", "-m", "youtube_video_mcp"],
         "env": {}
-    }
+    },
+    {
+        "server_name": "mcp-wikipedia",
+        "command": "python",
+        "args": ["main.py"],
+        "env": {}
+    },
 ]
+

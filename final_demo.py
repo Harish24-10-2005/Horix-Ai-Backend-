@@ -1,45 +1,11 @@
 """
-Comprehensive demo showcasing Enhanced AI Agent Protocol
-Natural Language MCP Server    print("✨ **Key Capabilities Demonstrated:**")
-    print("  ✅ Natural language command understanding")
-    print("  ✅ Automatic MCP server discovery and status")
-    print("  ✅ Intelligent agent type selection")
-    print("  ✅ Conversational interaction style")
-    print("  ✅ Error handling and helpful suggestion    print("Select mode:")
-    print("1. 📋 Comprehensive Demo")
-    print("2. 💬 Interactive Mode")  
-    print("3. 🧪 Prompt-Based MCP Addition Demo")
-    print("4. 🤖 Real AI Mode (Uses Your Groq API)")
-    print("5. 🧪 Demo AI Mode (No API Required)")
-    print("6. 📚 README Automation Demo")
-    print("7. 🔄 Automatic README Collection Demo") 
-    print("8. 🚪 Exit")
-    print()
-    
-    choice = input("Your choice (1-8): ").strip()int("  🆕 Prompt-based MCP server addition")
-    print("  🆕 Automatic GitHub search for MCPs")
-    print("  📚 Automatic README collection and documentation")
-    print()
-    print("🚀 **Next Steps:**")
-    print("  • Try interactive mode: python src/enhanced_ai_protocol_working.py")
-    print("  • Add Groq API key for LLM-powered processing")
-    print("  • Extend with custom MCP server definitions")
-    print("  • Check Doc/ folder for collected MCP documentation")
-    print()
-    print("💡 **Sample Commands to Try:**")
-    print("  • 'setup github mcp server'")
-    print("  • 'create monitoring agent with langsmith'")
-    print("  • 'add leetcode mcp server for coding practice'")
-    print("  • 'I need a docker mcp to manage containers'")
-    print("  • 'what mcp servers can I install?'")
-    print("  • 'I need help with filesystem integration'")
-    print()
-    print("📚 **Documentation Features:**")
-    print("  • READMEs automatically collected from downloaded MCPs")
-    print("  • Enhanced with integration notes and usage examples")
-    print("  • Organized in Doc/ folder with comprehensive index")
-    print("  • Statistics and metadata tracking")
-    print("  • Check: python demo_readme_automation.py")mpt-Based MCP Addition
+Comprehensive demo for Enhanced AI Agent Protocol
+
+This script provides a simple menu to showcase:
+- Natural language MCP management demos
+- Interactive mode
+- Prompt-based MCP addition
+- Real AI (Groq) and Demo AI modes
 """
 
 import asyncio
@@ -426,11 +392,10 @@ def main():
     print("3. 🧪 Prompt-Based MCP Addition Demo")
     print("4. 🤖 Real AI Mode (Uses Your Groq API)")
     print("5. 🧪 Demo AI Mode (No API Required)")
-    print("6. � README Automation Demo")
-    print("7. �🚪 Exit")
+    print("6. 🚪 Exit")
     print()
     
-    choice = input("Your choice (1-7): ").strip()
+    choice = input("Your choice (1-6): ").strip()
     
     if choice == "1":
         print("\n🎬 Starting comprehensive demo...")
@@ -449,17 +414,9 @@ def main():
         print("\n🧪 Starting Demo AI Mode...")
         asyncio.run(demo_ai_mode())
     elif choice == "6":
-        print("\n📚 Starting README automation demo...")
-        import subprocess
-        subprocess.run([sys.executable, "demo_readme_automation.py"])
-    elif choice == "7":
-        print("\n� Starting automatic README collection demo...")
-        import subprocess
-        subprocess.run([sys.executable, "demo_automatic_readme_collection.py"])
-    elif choice == "8":
-        print("\n�👋 Goodbye!")
+        print("\n👋 Goodbye!")
     else:
-        print("\n❌ Invalid choice. Please select 1-8.")
+        print("\n❌ Invalid choice. Please select 1-6.")
 
 if __name__ == "__main__":
     main()

@@ -53,7 +53,7 @@ class DynamicMCPManager:
             try:
                 self.llm = ChatGroq(
                     groq_api_key=groq_api_key,
-                    model_name="mixtral-8x7b-32768",
+                    model_name="llama-3.1-8b-instant",
                     temperature=0.1,
                     max_tokens=1024
                 )

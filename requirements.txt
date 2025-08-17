@@ -7,9 +7,20 @@ aiohttp>=3.9.0
 # LangChain for LLM integration and natural language processing
 langchain-groq>=0.1.0
 langchain-core>=0.2.0
+langchain-openai>=0.1.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# JSON parsing and data handling
+pydantic>=2.0.0
 
 # Optional but recommended for better performance
 requests>=2.31.0
+
+# API server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
 
 # Development and testing (optional)
 # pytest>=7.0.0

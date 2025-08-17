@@ -2,17 +2,17 @@
 
 **📚 Comprehensive README Collection for All MCP Servers**
 
-*Last Updated: 2025-08-03 00:13:40*
+*Last Updated: 2025-08-17 20:53:38*
 
 ---
 
 ## 📊 Collection Statistics
 
-- **Total MCP Servers:** 1
-- **Python MCPs:** 1
+- **Total MCP Servers:** 4
+- **Python MCPs:** 4
 - **JavaScript MCPs:** 0
 - **TypeScript MCPs:** 0
-- **Total README Files:** 1
+- **Total README Files:** 4
 
 ---
 
@@ -20,6 +20,9 @@
 
 ### 🐍 Python MCP Servers
 
+- [manim-mcp](./manim-mcp_README.md) - https://github.com/wstcpyt/manim-mcp
+- [mcp-git-ingest](./mcp-git-ingest_README.md) - https://github.com/adhikasp/mcp-git-ingest
+- [mcp-wikipedia](./mcp-wikipedia_README.md) - https://github.com/algonacci/mcp-wikipedia
 - [youtube_video_mcp](./youtube_video_mcp_README.md) - https://github.com/yug-space/youtube_video_mcp
 
 ---

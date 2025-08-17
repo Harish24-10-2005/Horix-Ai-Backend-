@@ -1,0 +1,44 @@
+{
+  "servers": [
+    {
+      "server_name": "YOUTUBE_VIDEO_MCP",
+      "language": "python",
+      "command": "python",
+      "args": [
+        "main.py"
+      ],
+      "cwd": "D:\\Horix AI\\Backend\\src\\Base\\MCP_structure\\mcp_servers\\python\\servers\\youtube_video_mcp",
+      "tools": []
+    },
+    {
+      "server_name": "manim-mcp",
+      "language": "python",
+      "command": "python",
+      "args": [
+        "animations/example.py"
+      ],
+      "cwd": "D:\\Horix AI\\Backend\\src\\Base\\MCP_structure\\mcp_servers\\python\\servers\\manim-mcp",
+      "tools": []
+    },
+    {
+      "server_name": "mcp-git-ingest",
+      "language": "python",
+      "command": "python",
+      "args": [
+        "src/mcp_git_ingest/main.py"
+      ],
+      "cwd": "D:\\Horix AI\\Backend\\src\\Base\\MCP_structure\\mcp_servers\\python\\servers\\mcp-git-ingest",
+      "tools": []
+    },
+    {
+      "server_name": "youtube_video_mcp",
+      "language": "python",
+      "command": "python",
+      "args": [
+        "main.py"
+      ],
+      "cwd": "D:\\Horix AI\\Backend\\src\\Base\\MCP_structure\\mcp_servers\\python\\servers\\youtube_video_mcp",
+      "tools": []
+    }
+  ]
+}

@@ -62,14 +62,11 @@ def check_system_status():
     # Check file structure
     required_files = [
         "final_demo.py",
-        "test_all_modes.py", 
         "README.md",
         "src/ai_agent_protocol/core.py",
         "src/enhanced_ai_protocol_working.py",
         "src/prompt_based_mcp_addition.py",
-        "src/readme_manager.py",
-        "demo_readme_automation.py",
-        "collect_readmes.py"
+        "src/readme_manager.py"
     ]
     
     print("\n📁 File Structure Check:")
@@ -107,14 +104,17 @@ def check_system_status():
     
     safe_print(f"\n🚀 Quick Start:")
     print(f"  python final_demo.py")
-    print(f"  python test_all_modes.py")
-    print(f"  python demo_readme_automation.py")
-    print(f"  python collect_readmes.py")
+    # Removed references to non-existent demo/test helpers
     
     safe_print("\n✅ SYSTEM STATUS: ALL COMPONENTS READY")
     safe_print("🎉 Ready to use Enhanced AI Agent Protocol!")
     
     return True
 
+def main():
+    ok = check_system_status()
+    sys.exit(0 if ok else 1)
+
+
 if __name__ == "__main__":
-    check_system_status()
+    main()
